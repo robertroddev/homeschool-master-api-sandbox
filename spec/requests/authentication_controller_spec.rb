@@ -10,7 +10,7 @@ RSpec.describe 'Api::V1::Auth::Authentication', type: :request do
         post api_v1_auth_login_url, params: { email: @teacher.email, password: 'password123' }
       end
       it 'should return a successfull response' do
-        assert_response :success
+        expect(response).to have_http_status(:success)
       end
       it 'should generate an access token' do
       end
