@@ -7,8 +7,11 @@ RSpec.describe 'Api::V1::Auth::Authentication', type: :request do
     describe 'when the login is successful' do
       before do
         @teacher = FactoryBot.create(:teacher)
+        post api_v1_auth_login_url, params: { email: @teacher.email, password: 'password123' }
       end
-
+      it 'should return a successfull response' do
+        assert_response :success
+      end
       it 'should generate an access token' do
       end
       it 'should generate a refresh token and store it in the db' do
