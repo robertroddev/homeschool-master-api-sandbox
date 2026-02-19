@@ -38,7 +38,7 @@ RSpec.describe 'Api::V1::Auth::Authentication', type: :request do
           post api_v1_auth_login_url, params: { email: @teacher.email, password: 'WrongPassword123' }
           json_response = JSON.parse(response.body)
 
-          expect(json_response['error']).to eq('unauthorized')
+          expect(json_response['error']['message']).to eq('Invalid email or password')
         end
       end
 
@@ -47,7 +47,7 @@ RSpec.describe 'Api::V1::Auth::Authentication', type: :request do
           post api_v1_auth_login_url, params: { email: 'email@doesnotexist.com', password: 'WrongPassword123' }
           json_response = JSON.parse(response.body)
 
-          expect(json_response['error']).to eq('unauthorized')
+          expect(json_response['error']['message']).to eq('Invalid email or password')
         end
       end
     end
