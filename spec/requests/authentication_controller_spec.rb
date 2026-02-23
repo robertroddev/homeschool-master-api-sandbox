@@ -143,4 +143,87 @@ RSpec.describe 'Api::V1::Auth::Authentication', type: :request do
       end
     end
   end
+
+  context 'POST /api/v1/auth/refresh' do
+    describe 'when refresh is successful' do
+      before do
+        @teacher = FactoryBot.create(:teacher)
+        # Login to get a valid refresh token
+        post api_v1_auth_login_url, params: { email: @teacher.email, password: 'password123' }
+        @login_response = JSON.parse(response.body)
+        @refresh_token = @login_response['refresh_token']
+
+        # Call refresh endpoint
+        post api_v1_auth_refresh_url, params: { refresh_token: @refresh_token }
+        @json_response = JSON.parse(response.body)
+      end
+
+      it 'should return a successful response' do
+        expect(response).to have_http_status(:success)
+      end
+
+      it 'should return a new access token' do
+        decoded = JwtService.decode(@json_response['access_token'])
+
+        expect(decoded).to be_present
+        expect(decoded[:teacher_id]).to eq(@teacher.id)
+      end
+
+      it 'should return the same refresh token' do
+        expect(@json_response['refresh_token']).to eq(@refresh_token)
+      end
+    end
+
+    describe 'when refresh fails' do
+      context 'when refresh token is invalid' do
+        it 'should return an unauthorized response' do
+          post api_v1_auth_refresh_url, params: { refresh_token: 'invalid-token' }
+          json_response = JSON.parse(response.body)
+
+          expect(response).to have_http_status(:unauthorized)
+          expect(json_response['error']['message']).to eq('Invalid refresh token')
+        end
+      end
+
+      context 'when refresh token is expired' do
+        before do
+          @teacher = FactoryBot.create(:teacher)
+          post api_v1_auth_login_url, params: { email: @teacher.email, password: 'password123' }
+          @login_response = JSON.parse(response.body)
+          @refresh_token = @login_response['refresh_token']
+
+          # Expire the token in database
+          RefreshToken.last.update(expires_at: 1.day.ago)
+        end
+
+        it 'should return an unauthorized response' do
+          post api_v1_auth_refresh_url, params: { refresh_token: @refresh_token }
+          json_response = JSON.parse(response.body)
+
+          expect(response).to have_http_status(:unauthorized)
+          expect(json_response['error']['message']).to eq('Invalid refresh token')
+        end
+      end
+
+      context 'when refresh token is revoked' do
+        before do
+          @teacher = FactoryBot.create(:teacher)
+          post api_v1_auth_login_url, params: { email: @teacher.email, password: 'password123' }
+          @login_response = JSON.parse(response.body)
+          @refresh_token = @login_response['refresh_token']
+
+          # Revoke the token
+          RefreshToken.last.update(revoked_at: Time.current)
+        end
+
+        it 'should return an unauthorized response' do
+          post api_v1_auth_refresh_url, params: { refresh_token: @refresh_token }
+          json_response = JSON.parse(response.body)
+
+          expect(response).to have_http_status(:unauthorized)
+          expect(json_response['error']['message']).to eq('Invalid refresh token')
+        end
+      end
+    end
+  end
 end
