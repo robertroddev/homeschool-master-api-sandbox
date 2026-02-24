@@ -226,4 +226,46 @@ RSpec.describe 'Api::V1::Auth::Authentication', type: :request do
       end
     end
   end
+
+  context 'POST /api/v1/auth/logout' do
+    describe 'when logout is successful' do
+      before do
+        @teacher = FactoryBot.create(:teacher)
+        post api_v1_auth_login_url, params: { email: @teacher.email, password: 'password123' }
+        @login_response = JSON.parse(response.body)
+        @refresh_token = @login_response['refresh_token']
+      end
+
+      it 'should return no content status' do
+        post api_v1_auth_logout_url, params: { refresh_token: @refresh_token }
+        expect(response).to have_http_status(:no_content)
+      end
+
+      it 'should revoke the refresh token' do
+        post api_v1_auth_logout_url, params: { refresh_token: @refresh_token }
+
+        token_record = RefreshToken.find_by(token: @refresh_token)
+        expect(token_record.revoked_at).to be_present
+      end
+
+      it 'should prevent the refresh token from being used again' do
+        post api_v1_auth_logout_url, params: { refresh_token: @refresh_token }
+        post api_v1_auth_refresh_url, params: { refresh_token: @refresh_token }
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    describe 'when token is invalid or missing' do
+      it 'should still return no content for invalid token' do
+        post api_v1_auth_logout_url, params: { refresh_token: 'invalid-token' }
+        expect(response).to have_http_status(:no_content)
+      end
+
+      it 'should still return no content for missing token' do
+        post api_v1_auth_logout_url, params: {}
+        expect(response).to have_http_status(:no_content)
+      end
+    end
+  end
 end
