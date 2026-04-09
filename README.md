@@ -1,5 +1,4 @@
 ## Status
-
 This project is currently in active development. The application is not yet launched publicly.
 
 ### Documentation can be found here:
