@@ -8,13 +8,7 @@ module Api
 
         def login
           result = AuthenticationService.call(params[:email], params[:password])
-
-          if result[:success]
-            tokens = generate_tokens(result[:teacher])
-            render json: transform_response(tokens), status: :ok
-          else
-            render_unauthorized(result[:error])
-          end
+          result[:success] ? handle_successful_login(result[:teacher]) : render_unauthorized(result[:error])
         end
 
         def register
@@ -32,6 +26,8 @@ module Api
 
           if result[:success]
             access_token = JwtService.encode({ teacher_id: result[:teacher_id] })
+            set_cookie(:access_token, access_token)
+            render json: { success: true }, status: :ok
             render json: transform_response({ access_token: access_token, refresh_token: params[:refresh_token] }),
                    status: :ok
           else
@@ -45,10 +41,22 @@ module Api
 
           token_record&.revoke!
 
+          clear_auth_cookies
+
           head :no_content
         end
 
+        def me
+          render json: transform_response({ user: teacher_response(current_teacher) }), status: :ok
+        end
+
         private
+
+        def handle_successful_login(teacher)
+          tokens = generate_tokens(teacher)
+          set_auth_cookies(tokens[:access_token], tokens[:refresh_token])
+          render json: transform_response({ user: teacher_response(teacher) }), status: :ok
+        end
 
         def register_params
           params.permit(:first_name, :last_name, :email, :password)
@@ -76,6 +84,26 @@ module Api
           )
 
           { access_token:, refresh_token: jwt_token, user: teacher_response(teacher) }
+        end
+
+        def set_auth_cookies(access_token, refresh_token)
+          set_cookie(:access_token, access_token)
+          set_cookie(:refresh_token, refresh_token)
+        end
+
+        def set_cookie(name, value)
+          cookies[name] = {
+            value: value,
+            httponly: true,
+            secure: Rails.env.production?,
+            same_site: :lax,
+            expires: 7.days.from_now
+          }
+        end
+
+        def clear_auth_cookies
+          cookies.delete(:access_token)
+          cookies.delete(:refresh_token)
         end
       end
     end

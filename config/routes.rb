@@ -8,6 +8,7 @@ Rails.application.routes.draw do
         post 'login', to: 'authentication#login'
         post 'refresh', to: 'authentication#refresh'
         post 'logout', to: 'authentication#logout'
+        get 'me', to: 'authentication#me'
         post 'password/reset-request', to: 'passwords#reset_request'
         post 'password/reset', to: 'passwords#reset'
         post 'password/change', to: 'passwords#change'

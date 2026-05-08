@@ -9,11 +9,12 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins '*' # In production, replace with actual domains
+    origins ENV.fetch('FRONTEND_URL')
 
     resource '*',
              headers: :any,
              methods: %i[get post put patch delete options head],
-             expose: %w[Authorization X-RateLimit-Limit X-RateLimit-Remaining]
+             expose: %w[Authorization X-RateLimit-Limit X-RateLimit-Remaining],
+             credentials: true
   end
 end

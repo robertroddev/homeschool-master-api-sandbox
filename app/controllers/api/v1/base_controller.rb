@@ -15,8 +15,8 @@ module Api
       private
 
       def authenticate_request
-        token = extract_token_from_header
-        return render_unauthorized('Missing authentiaction token') if token.nil?
+        token = extract_token
+        return render_unauthorized('Missing authentication token') if token.nil?
 
         decoded = JwtService.decode(token)
         return render_unauthorized('Invalid or expired token') if decoded.nil?
@@ -24,7 +24,11 @@ module Api
         @current_teacher = Teacher.find_by(id: decoded[:teacher_id])
         return render_unauthorized('Teacher not found') if @current_teacher.nil?
 
-        render_unauthorized(`Account is deactivated`) unless @current_teacher.nil?
+        render_unauthorized('Account is deactivated') unless @current_teacher.active?
+      end
+
+      def extract_token
+        cookies[:access_token]
       end
 
       def extract_token_from_header
