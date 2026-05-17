@@ -9,7 +9,10 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins ENV.fetch('FRONTEND_URL')
+    origins(
+      ENV.fetch('FRONTEND_URL'),
+      %r{\Ahttps://homeschool-master-web-.*\.vercel\.app\z}
+    )
 
     resource '*',
              headers: :any,
