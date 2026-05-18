@@ -1,3 +1,9 @@
+# Live preview: [homeschool-master-web.vercel.app](https://homeschool-master-web.vercel.app)
+
+> [!NOTE]
+> This is an in-progress build, not the final product. See Status below for what's currently functional.
+
+
 ## Status
 
 This project is currently in active development and not yet launched publicly.
