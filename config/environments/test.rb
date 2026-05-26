@@ -49,6 +49,11 @@ Rails.application.configure do
   # incoming request so you'll need to provide the :host parameter yourself.
   config.action_mailer.default_url_options = { host: 'www.example.com' }
 
+  # Use the test adapter for Active Job so jobs (including mailer deliveries sent
+  # via deliver_later) are not actually run, but are recorded for assertions like
+  # have_enqueued_job and have_enqueued_mail.
+  config.active_job.queue_adapter = :test
+
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
 
