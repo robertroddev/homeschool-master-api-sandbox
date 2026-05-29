@@ -14,9 +14,11 @@ Rails.application.routes.draw do
         post 'password/change', to: 'passwords#change'
         post 'email/verify', to: 'email_verification#verify'
         post 'email/resend-verification', to: 'email_verification#resend'
+        post 'email/change', to: 'email_change#request_change'
+        post 'email/change/confirm', to: 'email_change#confirm'
       end
 
-      # Protected routes
+      # Application routes (authenticated)
       patch 'profile', to: 'profile#update'
     end
   end

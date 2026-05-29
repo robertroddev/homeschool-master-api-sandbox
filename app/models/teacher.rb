@@ -66,6 +66,40 @@ class Teacher < ApplicationRecord
     )
   end
 
+  def generate_email_change_token!(new_email)
+    update!(
+      pending_email: new_email,
+      email_change_token: SecureRandom.urlsafe_base64(32),
+      email_change_sent_at: Time.current
+    )
+  end
+
+  def email_change_token_valid?
+    return false if email_change_token.blank? || email_change_sent_at.blank?
+
+    email_change_sent_at > 1.hour.ago
+  end
+
+  def confirm_email_change!
+    return false if pending_email.blank?
+
+    self.email = pending_email
+    self.email_verified_at = Time.current
+    self.email_verification_token = nil
+    self.pending_email = nil
+    self.email_change_token = nil
+    self.email_change_sent_at = nil
+    save
+  end
+
+  def clear_email_change!
+    update!(
+      pending_email: nil,
+      email_change_token: nil,
+      email_change_sent_at: nil
+    )
+  end
+
   # Class methods
 
   # Finds teacher regardless of email casing. Usefull when resetting pw and email, etc

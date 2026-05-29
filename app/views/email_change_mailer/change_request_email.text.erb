@@ -1,0 +1,11 @@
+Hi <%= @teacher.first_name %>,
+
+You requested to change the email on your Homeschool Master account to this address.
+
+Use the link below to confirm. This link expires in 1 hour:
+
+<%= @confirm_url %>
+
+If you didn't request this, you can safely ignore this email: your account email won't change.
+
+- The Homeschool Master team
